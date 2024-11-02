@@ -3,7 +3,7 @@ import time
 import json
 import random
 import streamlit as st
-st.set_page_config(page_title="答案之书",page_icon=":blue_book:",layout="wide",menu_items={
+st.set_page_config(page_title="答案之书",page_icon="icon.png",layout="wide",menu_items={
     'Get Help': 'https://github.com/youtianyu/The-Book-of-Answers/tree/main',
     'Report a bug': 'https://github.com/youtianyu/The-Book-of-Answers/tree/main',
     'About': '  这是一个基于Python的答案之书，使用Streamlit制作! 哪些人可以使用"答案之书":只有学生，老师勿用'
