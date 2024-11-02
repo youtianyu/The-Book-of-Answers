@@ -6,7 +6,7 @@ import streamlit as st
 st.set_page_config(page_title="答案之书",page_icon=":blue_book:",layout="wide",menu_items={
     'Get Help': 'https://github.com/',
     'Report a bug': 'https://github.com/',
-    'About': '  这是一个基于Python的答案之书，使用Streamlit制作\n文献提供者:作业帮\n程序制作者:我、python和streamlit的开发者\n哪些人可以使用程序:只有学生，老师勿用'
+    'About': '  这是一个基于Python的答案之书，使用Streamlit制作! 哪些人可以使用程序:只有学生，老师勿用'
 })
 def stream_data(text):
     for word in list(text):
