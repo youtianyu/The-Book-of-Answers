@@ -11,7 +11,7 @@ st.set_page_config(page_title="答案之书",page_icon=":blue_book:",layout="wid
 def stream_data(text):
     for word in list(text):
         yield word
-        time.sleep(0.001)
+        time.sleep(0.002)
 if "loder" not in st.session_state:
     with st.spinner("Loading..."):
         time.sleep(1)
