@@ -24,7 +24,7 @@ if st.session_state.login == False:
     with colc:
         st.title("  ")
         st.title("        :blue[登录]")
-        user = st.text_input("用户名")
+        user = st.text_input("用户名",value="root")
         password = st.text_input("密码",type="password")
         if st.button("登录"):
             if user == st.secrets.user_password.user and password == st.secrets.user_password.password:
