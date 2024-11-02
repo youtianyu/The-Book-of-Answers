@@ -74,7 +74,7 @@ else:
                                             st.write("字体:")
                                         with colr5:                                    
                                             mode = st.selectbox("    ",["流光","12px","14px","16px","18px","20px","22px","24px","26px","28px","30px","32px","34px","36px","38px","40px"])
-                                        if abs(0-(mtrl_num-1))>1:
+                                        if abs(0-(mtrl_num-1))>=1:
                                             u_mtrl_range = st.slider("选择一个范围:",0,mtrl_num-1,[0,0])
                                         else:
                                             u_mtrl_range = (0,0)
