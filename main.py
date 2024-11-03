@@ -189,9 +189,16 @@ else:
                 with open("set_tokens.txt", "w", encoding="utf-8") as f:
                     f.write("1024")
                 s_tokens = 1024
-            temperature = st.number_input("温度", min_value=0.0, max_value=1.5, value=0.95, step=0.01)
-            top_p = st.number_input("Top P", min_value=0.0, max_value=1.0, value=0.8, step=0.01)
-            max_tokens = st.number_input("最大令牌数", min_value=20, max_value=s_tokens, value=min(1024, s_tokens), step=1)
+            if os.path.exists("set_ai_oset.txt"):
+                with open("set_ai_oset.txt", "r", encoding="utf-8") as f:
+                    ai_oset = json.load(f)
+            else:
+                with open("set_ai_oset.txt", "w", encoding="utf-8") as f:
+                    f.write(json.dumps({"temperature":0.95,"top_p":0.8,"max_tokens":min(1024,s_tokens)}))
+                ai_oset = {"temperature":0.95,"top_p":0.8,"max_tokens":min(1024,s_tokens)}
+            temperature = st.number_input("温度", min_value=0.0, max_value=1.5, value=ai_oset["temperature"], step=0.01)
+            top_p = st.number_input("Top P", min_value=0.0, max_value=1.0, value=ai_oset["top_p"], step=0.01)
+            max_tokens = st.number_input("最大令牌数", min_value=50, max_value=s_tokens, value=min(ai_oset["max_tokens"], s_tokens), step=1)
         if st.sidebar.button("清空记录"):
             st.session_state.messages = []
         if prompt := st.chat_input():
@@ -232,13 +239,21 @@ else:
         if os.path.exists("others.txt"):
             others_data = open("others.txt", "r", encoding="utf-8").read()
         else:
-            open("others.txt", "w", encoding="utf-8").write("st.title('暂无信息')")
-            others_data = "st.title('暂无信息')"
+            open("others.txt", "w", encoding="utf-8").write("st.info('暂无信息, 请自行添加')")
+            others_data = "st.info('暂无信息, 请自行添加')"
         exec(others_data,globals())
     elif r_mode == ":blue[设置]":
         st.title(":blue[设置]")
         if st.sidebar.text_input("2FA-密钥", key="2FA_key", type="password") == st.secrets["2FA"]["2FA_key"]:
-            tab1,tab2,tab3,tab4 = st.tabs(["数据大小","Ai设置","更多信息","容器"])
+            if st.sidebar.button("退出"):
+                if "login" in st.session_state:
+                    del st.session_state.login
+                if "loder" in st.session_state:
+                    del st.session_state.loder
+                if "messages" in st.session_state:
+                    del st.session_state["messages"]
+                st.rerun()
+            tab1,tab2,tab3,tab4,tab5 = st.tabs(["数据大小","Ai设置","更多信息","容器","刷新"])
             with tab1:
                 size,num = get_folder_size_num("data")
                 st.write("数据大小为",size/1000,"千字节")
@@ -252,6 +267,10 @@ else:
                         ai_use_count = {"use_count":0, "total_tokens":0}
                     st.write("ai使用次数为",ai_use_count["use_count"],"次")
                     st.write("ai使用总令牌数为",ai_use_count["total_tokens"],"个")
+                    if st.button("重置"):
+                        ai_use_count = {"use_count":0, "total_tokens":0}
+                        with open("ai_use_count.json", "w", encoding="utf-8") as f:
+                            json.dump(ai_use_count, f)
                 with st.expander("设置最大令牌数"):
                     if os.path.exists("set_tokens.txt"):
                         with open("set_tokens.txt", "r", encoding="utf-8") as f:
@@ -264,12 +283,26 @@ else:
                     with open("set_tokens.txt", "w", encoding="utf-8") as f:
                         f.write(str(max_tokens))
                     st.info("已保存")
+                with st.expander("默认设置"):
+                    if os.path.exists("set_ai_oset.txt"):
+                        with open("set_ai_oset.txt", "r", encoding="utf-8") as f:
+                            ai_oset = json.load(f)
+                    else:
+                        with open("set_ai_oset.txt", "w", encoding="utf-8") as f:
+                            f.write(json.dumps({"temperature":0.95,"top_p":0.8,"max_tokens":min(1024,max_tokens)}))
+                        ai_oset = {"temperature":0.95,"top_p":0.8,"max_tokens":min(1024,max_tokens)}
+                    oset_temperature = st.number_input("temperature", min_value=0.0, max_value=1.5, value=ai_oset["temperature"], step=0.01)
+                    oset_top_p = st.number_input("top_p", min_value=0.0, max_value=1.0, value=ai_oset["top_p"], step=0.01)
+                    oset_max_tokens = st.number_input("max_tokens", min_value=50, max_value=8192, value=min(ai_oset["max_tokens"],max_tokens), step=1)
+                    with open("set_ai_oset.txt", "w", encoding="utf-8") as f:
+                        f.write(json.dumps({"temperature":oset_temperature,"top_p":oset_top_p,"max_tokens":oset_max_tokens}))
+                    st.info("已保存")
             with tab3:
                 if os.path.exists("others.txt"):
                     others_data = open("others.txt", "r", encoding="utf-8").read()
                 else:
-                    open("others.txt", "w", encoding="utf-8").write("st.title('暂无信息')")
-                    others_data = "st.title('暂无信息')"
+                    open("others.txt", "w", encoding="utf-8").write("st.info('暂无信息, 请自行添加')")
+                    others_data = "st.info('暂无信息, 请自行添加')"
                 others_data = st.text_area("      ", others_data,key="change_others_data")
                 open("others.txt", "w", encoding="utf-8").write(others_data)
                 st.info("已保存")
@@ -285,5 +318,16 @@ else:
                 with open("set_rq_height.txt", "w", encoding="utf-8") as f:
                     f.write(str(rq_height))
                 st.info("已保存")
+            with tab5:
+                if st.button("刷新"):
+                    st.rerun()
         else:
+            if st.sidebar.button("退出"):
+                if "login" in st.session_state:
+                    del st.session_state.login
+                if "loder" in st.session_state:
+                    del st.session_state.loder
+                if "messages" in st.session_state:
+                    del st.session_state["messages"]
+                st.rerun()
             st.warning("请输入正确的2FA密钥")
