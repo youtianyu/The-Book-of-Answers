@@ -187,6 +187,13 @@ else:
             model_name_s = {"openai":"gpt-4","zhipuai":"glm-4-Flash"}
             with open("set_model_name.json", "w", encoding="utf-8") as f:
                 json.dump(model_name_s, f)
+        if os.path.exists("set_openai_base_url.json"):
+            with open("set_openai_base_url.json", "r", encoding="utf-8") as f:
+                openai_base_url = json.load(f)
+        else:
+            openai_base_url = {"openai_base_url":0}
+            with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
+                json.dump(openai_base_url, f)
         with st.sidebar.expander("设置"):
             if os.path.exists("set_tokens.txt"):
                 with open("set_tokens.txt", "r", encoding="utf-8") as f:
@@ -220,7 +227,10 @@ else:
                     model_name = model_name_s["openai"]
                 else:
                     model_name = model_name_s["zhipuai"]
-                ai = ai_module(api_key=openai_api_key)
+                if openai_base_url["openai_base_url"] != 0:
+                    ai = ai_module(api_key=openai_api_key, base_url=openai_base_url["openai_base_url"])
+                else:
+                    ai = ai_module(api_key=openai_api_key)
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 st.chat_message("user").write(prompt)
                 response = ai.chat.completions.create(model=model_name, messages=st.session_state.messages,stream=True, temperature=temperature, top_p=top_p, max_tokens=max_tokens)
@@ -282,10 +292,24 @@ else:
                         with open("set_model_name.json", "w", encoding="utf-8") as f:
                             json.dump(model_name, f)
                     openai_model =  st.text_input("openai模型", value=model_name["openai"])
+                    if os.path.exists("set_openai_base_url.json"):
+                        with open("set_openai_base_url.json", "r", encoding="utf-8") as f:
+                            openai_base_url = json.load(f)
+                    else:
+                        openai_base_url = {"openai_base_url":0}
+                        with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
+                            json.dump(openai_base_url, f)
+                    if st.checkbox("添加base_url"):
+                        openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value="https://api.openai.com/v1")
+                    else:
+                        openai_base_url["openai_base_url"] 
+
                     zhipuai_model =  st.text_input("zhipuai模型", value=model_name["zhipuai"])
                     model_name = {"openai":openai_model,"zhipuai":zhipuai_model}
                     with open("set_model_name.json", "w", encoding="utf-8") as f:
                         json.dump(model_name, f)
+                    with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
+                        json.dump(openai_base_url, f)
                     st.info("已保存")
 
                 with st.expander("ai使用次数"):
@@ -360,3 +384,6 @@ else:
                     del st.session_state["messages"]
                 st.rerun()
             st.warning("请输入正确的2FA密钥")
+
+
+
