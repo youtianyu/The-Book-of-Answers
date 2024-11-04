@@ -299,7 +299,7 @@ else:
                         openai_base_url = {"openai_base_url":0}
                         with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
                             json.dump(openai_base_url, f)
-                    if st.checkbox("添加base_url"):
+                    if st.checkbox("添加base_url",value=(openai_base_url["openai_base_url"]!=0 and openai_base_url["openai_base_url"]!="0")):
                         openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value=openai_base_url["openai_base_url"])
                     else:
                         openai_base_url["openai_base_url"] = 0
@@ -384,6 +384,9 @@ else:
                     del st.session_state["messages"]
                 st.rerun()
             st.warning("请输入正确的2FA密钥")
+
+
+
 
 
 
