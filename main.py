@@ -166,21 +166,27 @@ else:
                 else:
                     st.warning("暂无练习册")
     elif r_mode == ":orange[AI求解]":
-        from zhipuai import ZhipuAI
         with st.sidebar:
             openai_api_key = st.text_input("请输入您的 API Key", key="chatbot_api_key", type="password")
         if "zhipuAI_api_key" in st.secrets:
             if openai_api_key in st.secrets.zhipuAI_api_key:
                 openai_api_key = st.secrets.zhipuAI_api_key[openai_api_key]
-        st.title(":orange[ChatGLM]")
-        st.caption("由 ZhipuAI 提供支持的 Streamlit 聊天机器人")
+        st.title(":orange[ChatGPT/GLM]")
+        st.caption("Streamlit 聊天机器人")
         if "messages" not in st.session_state:
             st.session_state["messages"] = [{"role": "assistant", "content": "您好，我是人工智能助手，基于智谱 AI 公司于 2024 年训练的语言模型 GLM-4 开发而成。我的任务是针对用户的问题和要求提供适当的答复和支持。我可以回答各种领域的问题，包括但不限于科学、技术、历史、文化、娱乐等。如果您有任何问题，请随时向我提问。"}]
-        with st.container(height=rq_height):
+        with st.container(height=rq_height,border=False):
             for msg in st.session_state.messages:
                 st.chat_message(msg["role"]).write(msg["content"])
         total_tokens = 0
         text = ""
+        if os.path.exists("set_model_name.json"):
+            with open("set_model_name.json", "r", encoding="utf-8") as f:
+                model_name_s = json.load(f)
+        else:
+            model_name_s = {"openai":"gpt-4","zhipuai":"glm-4-Flash"}
+            with open("set_model_name.json", "w", encoding="utf-8") as f:
+                json.dump(model_name_s, f)
         with st.sidebar.expander("设置"):
             if os.path.exists("set_tokens.txt"):
                 with open("set_tokens.txt", "r", encoding="utf-8") as f:
@@ -205,11 +211,19 @@ else:
             if not openai_api_key:
                 st.info("请添加您的 OpenAI API 密钥以继续。")
             else:
-                # 创建ZhipuAI对象
-                ai = ZhipuAI(api_key=openai_api_key)
+                if "sk-" in openai_api_key:
+                    from openai import OpenAI as ai_module
+                else:
+                    from zhipuai import ZhipuAI as ai_module
+                # 创建对象
+                if "sk-" in openai_api_key:
+                    model_name = model_name_s["openai"]
+                else:
+                    model_name = model_name_s["zhipuai"]
+                ai = ai_module(api_key=openai_api_key)
                 st.session_state.messages.append({"role": "user", "content": prompt})
                 st.chat_message("user").write(prompt)
-                response = ai.chat.completions.create(model="glm-4-Flash", messages=st.session_state.messages,stream=True, temperature=temperature, top_p=top_p, max_tokens=max_tokens)
+                response = ai.chat.completions.create(model=model_name, messages=st.session_state.messages,stream=True, temperature=temperature, top_p=top_p, max_tokens=max_tokens)
                 total_tokens = 0
                 text = ""
                 with st.spinner("正在生成回复中..."):
@@ -259,6 +273,21 @@ else:
                 st.write("数据大小为",size/1000,"千字节")
                 st.write("数据文件数为",num,"个")
             with tab2:
+                with st.expander("模型设置"):
+                    if os.path.exists("set_model_name.json"):
+                        with open("set_model_name.json", "r", encoding="utf-8") as f:
+                            model_name = json.load(f)
+                    else:
+                        model_name = {"openai":"gpt-4","zhipuai":"glm-4-Flash"}
+                        with open("set_model_name.json", "w", encoding="utf-8") as f:
+                            json.dump(model_name, f)
+                    openai_model =  st.text_input("openai模型", value=model_name["openai"])
+                    zhipuai_model =  st.text_input("zhipuai模型", value=model_name["zhipuai"])
+                    model_name = {"openai":openai_model,"zhipuai":zhipuai_model}
+                    with open("set_model_name.json", "w", encoding="utf-8") as f:
+                        json.dump(model_name, f)
+                    st.info("已保存")
+
                 with st.expander("ai使用次数"):
                     if os.path.exists("ai_use_count.json"):
                         with open("ai_use_count.json", "r", encoding="utf-8") as f:
