@@ -300,9 +300,9 @@ else:
                         with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
                             json.dump(openai_base_url, f)
                     if st.checkbox("添加base_url"):
-                        openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value="https://api.openai.com/v1")
+                        openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value=openai_base_url["openai_base_url"])
                     else:
-                        openai_base_url["openai_base_url"] 
+                        openai_base_url["openai_base_url"] = 0
 
                     zhipuai_model =  st.text_input("zhipuai模型", value=model_name["zhipuai"])
                     model_name = {"openai":openai_model,"zhipuai":zhipuai_model}
@@ -332,7 +332,7 @@ else:
                         with open("set_tokens.txt", "w", encoding="utf-8") as f:
                             f.write("1024")
                         tokens = 1024
-                    max_tokens = st.number_input("最大令牌数", min_value=20, max_value=8192, value=tokens, step=1)
+                    max_tokens = st.number_input("最大令牌数", min_value=50, max_value=8192, value=tokens, step=1)
                     with open("set_tokens.txt", "w", encoding="utf-8") as f:
                         f.write(str(max_tokens))
                     st.info("已保存")
