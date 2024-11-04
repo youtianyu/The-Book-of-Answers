@@ -172,9 +172,9 @@ else:
             if openai_api_key in st.secrets.zhipuAI_api_key:
                 openai_api_key = st.secrets.zhipuAI_api_key[openai_api_key]
         st.title(":orange[ChatGPT/GLM]")
-        st.caption("Streamlit 聊天机器人")
+        st.caption("Streamlit 聊天机器人（比人机香芋写得好）")
         if "messages" not in st.session_state:
-            st.session_state["messages"] = [{"role": "assistant", "content": "您好，我是人工智能助手，基于智谱 AI 公司于 2024 年训练的语言模型 GLM-4 开发而成。我的任务是针对用户的问题和要求提供适当的答复和支持。我可以回答各种领域的问题，包括但不限于科学、技术、历史、文化、娱乐等。如果您有任何问题，请随时向我提问。"}]
+            st.session_state["messages"] = [{"role": "assistant", "content": "您好，我是人工智能助手。我的任务是针对用户的问题和要求提供适当的答复和支持。我可以回答各种领域的问题，包括但不限于科学、技术、历史、文化、娱乐等。如果您有任何问题，请随时向我提问。"}]
         with st.container(height=rq_height,border=False):
             for msg in st.session_state.messages:
                 st.chat_message(msg["role"]).write(msg["content"])
