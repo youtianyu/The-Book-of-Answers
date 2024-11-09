@@ -16,6 +16,17 @@ else:
     with open("set_rq_height.txt", "w", encoding="utf-8") as f:
         f.write("500")
     rq_height = 500
+if os.path.exists("publicity.txt"):
+    with open("publicity.txt", "r", encoding="utf-8") as f:
+        additionalcode = f.read()
+else:
+    with open("publicity.txt", "w", encoding="utf-8") as f:
+        f.write("")
+    additionalcode = ""
+settings = {
+    "additionalcode": additionalcode,
+    "long_term_file":"data/"
+}
 def write_stream(response):
     global total_tokens,text
     text = ""
@@ -46,6 +57,8 @@ def get_folder_size_num(folder_path):
             total_size += os.path.getsize(os.path.join(dirpath, f))
             total_num += 1
     return total_size,total_num
+if not "mode" in st.session_state:
+    st.session_state["mode"] = "books"
 if "loder" not in st.session_state:
     with st.spinner("Loading..."):
         time.sleep(1)
@@ -53,25 +66,34 @@ if "loder" not in st.session_state:
     st.rerun()
 if "login" not in st.session_state:
     st.session_state.login = False
-
-if st.session_state.login == False:
-    coll,colc,colr = st.columns([1,2,1])
-    with colc:
-        st.title("  ")
-        st.title("        :blue[登录]")
-        user = st.text_input("用户名",value="root")
-        password = st.text_input("密码",type="password")
-        if st.button("登录"):
-            if user == st.secrets.user_password.user and password == st.secrets.user_password.password:
-                st.session_state.login = True
-                st.info("授予访问权限")
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("用户名或密码错误")
-                time.sleep(1)
-                st.rerun()
+if os.path.exists("is_login_free_mode.txt"):
+    with open("is_login_free_mode.txt", "r", encoding="utf-8") as f:
+        is_login_free_mode = f.read()
 else:
+    is_login_free_mode = "disable"
+    open("is_login_free_mode.txt", "w", encoding="utf-8").write(is_login_free_mode)
+if st.session_state.login == False:
+    if is_login_free_mode == "disable":
+        coll,colc,colr = st.columns([1,2,1])
+        with colc:
+            st.title("  ")
+            st.title("        :blue[登录]")
+            user = st.text_input("用户名",value="root")
+            password = st.text_input("密码",type="password")
+            if st.button("登录"):
+                if user == st.secrets.user_password.user and password == st.secrets.user_password.password:
+                    st.session_state.login = True
+                    st.info("授予访问权限")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("用户名或密码错误")
+                    time.sleep(1)
+                    st.rerun()
+    else:
+        st.session_state.login = True
+        st.rerun()
+elif st.session_state['mode'] == "books":
     st.sidebar.title(":blue[答案之书] :blue_book:")
     r_mode = st.sidebar.radio("功能:",[":red[查找答案]",":orange[AI求解]",":green[更多信息]",":blue[设置]"])
     if r_mode == ":red[查找答案]":
@@ -110,7 +132,7 @@ else:
                                                 st.write("  ")
                                                 st.write("字体:")
                                             with colr5:                                    
-                                                mode = st.selectbox("    ",["流光","12px","14px","16px","18px","20px","22px","24px","26px","28px","30px","32px","34px","36px","38px","40px"])
+                                                mode = st.selectbox("    ",["流","12px","14px","16px","18px","20px","22px","24px","26px","28px","30px","32px","34px","36px","38px","40px"])
                                             if abs(0-(mtrl_num-1))>0:
                                                 u_mtrl_range = st.slider("选择一个范围:",0,mtrl_num-1,[0,0])
                                             else:
@@ -125,23 +147,40 @@ else:
                                                 for i2 in range(u_mtrl_range[0],u_mtrl_range[1]+1):
                                                     i = mtrl_ls_dir[i2]
                                                     if i.endswith(".png") or i.endswith(".jpg") or i.endswith(".jpeg"):
-                                                        st.image(i,caption=f"第{mtrl_ls_dir.index(i)+1}章",use_column_width=True)
+                                                        st.image(i,caption=f"第{mtrl_ls_dir.index(i)+1}章  "+str(i),use_column_width=True)
                                                     elif i.endswith(".txt"):
                                                         with open(i,"r",encoding="utf-8") as f:
                                                             with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
                                                                 dh_data = f.read()
                                                                 if "\n" in dh_data:
                                                                     for i3 in dh_data.split("\n"):
-                                                                        if mode == "流光":
+                                                                        if mode == "流":
                                                                             st.write_stream(stream_data(i3))
                                                                         else:
                                                                             st.markdown(f"<p style='font-size:{mode};'>{i3}</p>", unsafe_allow_html=True)
                                                                 else:
-                                                                    if mode == "流光":
+                                                                    if mode == "流":
                                                                         st.write_stream(stream_data(f.read()))
                                                                     else:
                                                                         st.markdown(f"<p style='font-size:{mode};'>{f.read()}</p>", unsafe_allow_html=True)
-                                                            st.caption(f"{mtrl_name} 第{i2+1}章")
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                    elif i.endswith(".py"):
+                                                        show_code = False
+                                                        with open(i,"r",encoding="utf-8") as f:
+                                                            with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                py_data = f.read()
+                                                                with st.spinner("正在运行控件..."):
+                                                                    try:
+                                                                        exec(py_data,globals())
+                                                                        show_code = True
+                                                                    except:
+                                                                        st.error("控件运行失败")
+                                                                        st.code(py_data,language="python")
+                                                                        show_code = False
+                                                            with st.expander("源"):
+                                                                st.code(py_data,language="python")
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                                
                                                     else:
                                                         st.warning("未知文件类型")
                                                     dbs.append(i)
@@ -165,6 +204,13 @@ else:
                         st.warning("暂无练习册")
                 else:
                     st.warning("暂无练习册")
+        if st.sidebar.button("进入文件管理器"):
+            st.session_state["mode"] = "manager"
+            st.rerun()
+        try:
+            exec(settings["additionalcode"],globals())
+        except:
+            pass
     elif r_mode == ":orange[AI求解]":
         with st.sidebar:
             openai_api_key = st.text_input("请输入您的 API Key", key="chatbot_api_key", type="password")
@@ -172,7 +218,7 @@ else:
             if openai_api_key in st.secrets.zhipuAI_api_key:
                 openai_api_key = st.secrets.zhipuAI_api_key[openai_api_key]
         st.title(":orange[ChatGPT/GLM]")
-        st.caption("Streamlit 聊天机器人（比人机香芋写得好）")
+        st.caption("Streamlit 聊天机器人")
         if "messages" not in st.session_state:
             st.session_state["messages"] = [{"role": "assistant", "content": "您好，我是人工智能助手。我的任务是针对用户的问题和要求提供适当的答复和支持。我可以回答各种领域的问题，包括但不限于科学、技术、历史、文化、娱乐等。如果您有任何问题，请随时向我提问。"}]
         with st.container(height=rq_height,border=False):
@@ -259,6 +305,10 @@ else:
                     else:
                         ai_use_count = {"use_count":0, "total_tokens":0}
                     json.dump(ai_use_count, f)
+        try:
+            exec(settings["additionalcode"],globals())
+        except:
+            pass
     elif r_mode == ":green[更多信息]":
         if os.path.exists("others.txt"):
             others_data = open("others.txt", "r", encoding="utf-8").read()
@@ -266,6 +316,10 @@ else:
             open("others.txt", "w", encoding="utf-8").write("st.info('暂无信息, 请自行添加')")
             others_data = "st.info('暂无信息, 请自行添加')"
         exec(others_data,globals())
+        try:
+            exec(settings["additionalcode"],globals())
+        except:
+            pass
     elif r_mode == ":blue[设置]":
         st.title(":blue[设置]")
         if st.sidebar.text_input("2FA-密钥", key="2FA_key", type="password") == st.secrets["2FA"]["2FA_key"]:
@@ -277,7 +331,19 @@ else:
                 if "messages" in st.session_state:
                     del st.session_state["messages"]
                 st.rerun()
-            tab1,tab2,tab3,tab4,tab5 = st.tabs(["数据大小","Ai设置","更多信息","容器","刷新"])
+            tab0,tab1,tab2,tab3,tab4,tab6,tab5 = st.tabs(["登录","数据大小","Ai设置","更多信息","容器","公示","刷新"])
+            with tab0:
+                if os.path.exists("is_login_free_mode.txt"):
+                    with open("is_login_free_mode.txt", "r", encoding="utf-8") as f:
+                        is_login_free_mode = f.read()
+                else:
+                    is_login_free_mode = "disable"
+                    open("is_login_free_mode.txt", "w", encoding="utf-8").write(is_login_free_mode)
+                is_login_free_mode = st.selectbox("免登录模式",["disable","enable"],index=["disable","enable"].index(is_login_free_mode))
+                with open("is_login_free_mode.txt", "w", encoding="utf-8") as f:
+                    f.write(is_login_free_mode)
+                st.info("已保存")
+
             with tab1:
                 size,num = get_folder_size_num("data")
                 st.write("数据大小为",size/1000,"千字节")
@@ -300,7 +366,7 @@ else:
                         with open("set_openai_base_url.json", "w", encoding="utf-8") as f:
                             json.dump(openai_base_url, f)
                     if st.checkbox("添加base_url",value=(openai_base_url["openai_base_url"]!=0 and openai_base_url["openai_base_url"]!="0")):
-                        openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value=openai_base_url["openai_base_url"])
+                        openai_base_url["openai_base_url"] = st.text_input("openai_base_url", value="" if openai_base_url["openai_base_url"]==0 else openai_base_url["openai_base_url"])
                     else:
                         openai_base_url["openai_base_url"] = 0
 
@@ -367,9 +433,18 @@ else:
                     with open("set_rq_height.txt", "w", encoding="utf-8") as f:
                         f.write("500")
                     rq_height = 500
-                rq_height = st.number_input("容器高度", min_value=0, max_value=1000, value=rq_height, step=1)
+                rq_height = st.number_input("容器高度", min_value=0, max_value=1400, value=rq_height, step=1)
                 with open("set_rq_height.txt", "w", encoding="utf-8") as f:
                     f.write(str(rq_height))
+                st.info("已保存")
+            with tab6:
+                if os.path.exists("publicity.txt"):
+                    publicity_data = open("publicity.txt", "r", encoding="utf-8").read()
+                else:
+                    open("publicity.txt", "w", encoding="utf-8").write("")
+                    publicity_data = ""
+                publicity_data = st.text_area("      ", value = publicity_data,key="change_publicity_data")
+                open("publicity.txt", "w", encoding="utf-8").write(publicity_data)
                 st.info("已保存")
             with tab5:
                 if st.button("刷新"):
@@ -384,9 +459,349 @@ else:
                     del st.session_state["messages"]
                 st.rerun()
             st.warning("请输入正确的2FA密钥")
+    
+elif st.session_state["mode"] == "manager":
+    import shutil
+    datadir = settings["long_term_file"]
+    if not "is_write" in st.session_state:
+        st.session_state["is_write"] = False
+    if "2FA" in st.secrets:
+        if "2FA_key" in st.secrets["2FA"]:
+            settings["password"] = st.secrets["2FA"]["2FA_key"]
+    if st.session_state["is_write"] == False:
+        try:
+            if "password" in settings:
+                # 验证身份
+                password = st.sidebar.text_input("密码:", type="password")
+                if not password == "":
+                    if settings["password"] == password:
+                        st.sidebar.info("授予写入权限")
+                        st.session_state["is_write"] = True
+                    else:
+                        st.sidebar.warning("密码无效")
+                else:
+                    st.sidebar.success("请输入密码")
+            else:
+                st.sidebar.warning("未设置密码")
+        except:
+            st.rerun()
+    def get_folder_structure(root_folder):
+        # 初始化结果字典
+        result = {}
+        path = root_folder
+        listdir = os.listdir(root_folder)
+        for f in listdir:
+            if os.path.isdir(os.path.join(path, f)):
+                result[f] = get_folder_structure(os.path.join(path, f))
+                # 递归调用
 
+            else:
+                result[f] = None
+                # 文件路径
+        return result
+    def select_file(data_tree,path=".",n=0):
+        list_data_tree = list(data_tree.keys())
+        list_data_tree.insert(0,".")
+        selected_file = st.sidebar.selectbox(" ", list_data_tree,key="file_select_"+str(n))
+        if selected_file == ".":
+            return path
+        elif data_tree[selected_file] == None:
+            return path+os.sep+selected_file
+        elif data_tree[selected_file] == {}:
+            return path+os.sep+selected_file
+        else:
+            return select_file(data_tree[selected_file],path+os.sep+selected_file,n=n+1)
+    def is_dir(path,data_tree):
+        path = path.split(os.sep)
+        path.pop(0)
+        last = ""
+        while len(path)>0:
+            if not path[0] == None:
+                if path[0] in list(data_tree.keys()):
+                    data_tree = data_tree[path[0]]
+                    last = path[0]
+                    path.pop(0)
+                else:
+                    return False
+            else:
+                return False
+        if data_tree == None:
+            return False
+        else:
+            return True
+    data_dir = datadir
+    if st.session_state["is_write"]:
+        try:
+            st.title(":blue[文件管理器🗂️]")
+            st.caption("管理员模式")
+            data_tree = get_folder_structure(data_dir)
+            select_file_or_dir = select_file(data_tree)
+            select_file_or_dir_abs = select_file_or_dir.replace(".",data_dir,1)
+            if is_dir(select_file_or_dir,data_tree):
+                if select_file_or_dir != ".":
+                    st.info(select_file_or_dir.replace(os.sep," > "))
+                    file_upload_tab,new_dir_tab,delete_file_tab,rename_dir_tab = st.tabs(["上传文件","新建文件夹","删除文件夹","重命名文件夹"])
+                    with file_upload_tab:
+                        is_overwrite = st.checkbox("覆盖已有文件",key="is_overwrite")
+                        upload_file = st.file_uploader("上传文件",key="upload_file",accept_multiple_files=True)
+                        if upload_file:
+                            if st.button("上传",key="upload_file_button"):
+                                with st.spinner("上传中..."):
+                                    for file in upload_file:
+                                        if is_overwrite:
+                                            with open(select_file_or_dir_abs+os.sep+file.name,"wb") as f:
+                                                f.write(file.read())
+                                            st.success(file.name+ " 上传成功")
+                                        else:
+                                            if os.path.exists(select_file_or_dir_abs+os.sep+file.name):
+                                                st.warning(file.name+ " 已存在")
+                                            else:
+                                                with open(select_file_or_dir_abs+os.sep+file.name,"wb") as f:
+                                                    f.write(file.read())
+                                                st.success(file.name+ " 上传成功")
+                                upload_file = None
+                                st.info("上传完成")
+                                st.rerun()
+                            else:
+                                st.success("请点击上传按钮以上传文件")
+                        else:
+                            st.success("请选择文件")
+                    with new_dir_tab:
+                        new_dir_name = st.text_input("请输入文件夹名称",key="new_dir_name")
+                        if new_dir_name != "":
+                            new_dir = st.button("新建文件夹",key="new_folder")
+                            if new_dir:
+                                not_in_name = ["\\","/",">","<",":","*","?","\"","|"]
+                                can_be_name = True
+                                for i in not_in_name:
+                                    if i in new_dir_name:
+                                        can_be_name = False
+                                if can_be_name:
+                                    if os.path.exists(select_file_or_dir_abs+os.sep+new_dir_name):
+                                        st.warning("文件夹已存在, 新建文件夹失败")
+                                    else:
+                                        os.mkdir(select_file_or_dir_abs+os.sep+new_dir_name)
+                                        st.info("新建文件夹成功")
+                                        st.rerun()
+                                else:
+                                    st.warning("文件夹名称不合法")
+                                new_dir = False
+                            else:
+                                st.success("请点击新建文件夹按钮以新建文件夹")
+                        else:
+                            st.success("请输入文件夹名称")
+                    with delete_file_tab:
+                        delete_file = st.button("删除文件夹",key="delete_dir")
+                        if delete_file:
+                            if os.path.isdir(select_file_or_dir_abs):
+                                shutil.rmtree(select_file_or_dir_abs)
+                                st.info("删除文件夹成功")
+                                st.rerun()
+                            else:
+                                st.warning("删除文件夹失败")
+                            delete_file = False
+                    with rename_dir_tab:
+                        new_dir_name = st.text_input("请输入更名后的文件夹名称",key="rename_dir_name")
+                        if new_dir_name != "":
+                            rename_dir = st.button("重命名文件夹",key="rename_folder")
+                            if rename_dir:
+                                not_in_name = ["\\","/",">","<",":","*","?","\"","|"]
+                                if os.path.isdir(select_file_or_dir_abs):
+                                    can_be_name = True
+                                    for i in not_in_name:
+                                        if i in new_dir_name:
+                                            can_be_name = False
+                                    if can_be_name:
+                                        renamed = (os.sep).join(select_file_or_dir_abs.split(os.sep)[:-1])+os.sep+new_dir_name
+                                        print(renamed)
+                                        if os.path.exists(renamed):
+                                            st.warning("文件夹已存在")
+                                        else:
+                                            os.rename(select_file_or_dir_abs,renamed)
+                                            st.info("重命名文件夹成功")
+                                            st.rerun()
+                                    else:
+                                        st.warning("文件夹名称不合法")
+                                else:
+                                    st.warning("重命名文件夹失败")
+                                rename_dir = False
+                            else:
+                                st.success("请点击重命名文件夹按钮以重命名文件夹")
+                        else:
+                            st.success("请输入文件夹名称")
+                else:
+                    st.info(select_file_or_dir.replace(os.sep," > "))
+                    file_upload_tab,new_dir_tab = st.tabs(["上传文件","新建文件夹"])
+                    with file_upload_tab:
+                        is_overwrite = st.checkbox("覆盖已有文件",key="is_overwrite")
+                        upload_file = st.file_uploader("上传文件",key="upload_file",accept_multiple_files=True)
+                        if upload_file:
+                            if st.button("上传",key="upload_file_button"):
+                                with st.spinner("上传中..."):
+                                    for file in upload_file:
+                                        if is_overwrite:
+                                            with open(select_file_or_dir_abs+os.sep+file.name,"wb") as f:
+                                                f.write(file.read())
+                                            st.success(file.name+ " 上传成功")
+                                        else:
+                                            if os.path.exists(select_file_or_dir_abs+os.sep+file.name):
+                                                st.warning(file.name+ " 已存在")
+                                            else:
+                                                with open(select_file_or_dir_abs+os.sep+file.name,"wb") as f:
+                                                    f.write(file.read())
+                                                st.success(file.name+ " 上传成功")
+                                upload_file = None
+                                st.info("上传完成")
+                                st.rerun()
+                            else:
+                                st.success("请点击上传按钮以上传文件")
+                        else:
+                            st.success("请选择文件")
+                    with new_dir_tab:
+                        new_dir_name = st.text_input("请输入文件夹名称",key="new_dir_name")
+                        if new_dir_name != "":
+                            new_dir = st.button("新建文件夹",key="new_folder")
+                            if new_dir:
+                                not_in_name = ["\\","/",">","<",":","*","?","\"","|"]
+                                can_be_name = True
+                                for i in not_in_name:
+                                    if i in new_dir_name:
+                                        can_be_name = False
+                                if can_be_name:
+                                    if os.path.exists(select_file_or_dir_abs+os.sep+new_dir_name):
+                                        st.warning("文件夹已存在, 新建文件夹失败")
+                                    else:
+                                        os.mkdir(select_file_or_dir_abs+os.sep+new_dir_name)
+                                        st.info("新建文件夹成功")
+                                        st.rerun()
+                                else:
+                                    st.warning("文件夹名称不合法")
+                                new_dir = False
+                            else:
+                                st.success("请点击新建文件夹按钮以新建文件夹")
+                        else:
+                            st.success("请输入文件夹名称")
+            else:
+                st.info(select_file_or_dir.replace(os.sep," > "))
+                with st.expander("查看文件"):
+                    if st.checkbox("显示文件内容",key="show_file_content"):
+                        # 如果文件大小小于100M，则显示文件内容
+                        if os.path.getsize(select_file_or_dir_abs) < 100*1024*1024:
+                            if select_file_or_dir_abs.endswith(".txt"):
+                                with open(select_file_or_dir_abs,"r",encoding="utf-8") as f:
+                                    st.text(f.read())
+                            elif select_file_or_dir_abs.endswith(".jpg"):
+                                st.image(select_file_or_dir_abs)
+                            elif select_file_or_dir_abs.endswith(".png"):
+                                st.image(select_file_or_dir_abs)
+                            elif select_file_or_dir_abs.endswith(".gif"):
+                                st.image(select_file_or_dir_abs)
+                            elif select_file_or_dir_abs.endswith(".mp4"):
+                                st.video(select_file_or_dir_abs)
+                            elif select_file_or_dir_abs.endswith(".mp3"):
+                                st.audio(select_file_or_dir_abs,format="audio/mp3")
+                            elif select_file_or_dir_abs.endswith(".wav"):
+                                st.audio(select_file_or_dir_abs,format="audio/wav")
+                            else:
+                                st.warning("无法显示文件内容")
+                        else:
+                            st.warning("文件过大，无法显示文件内容")
+                download,rename_dir_tab,delete_file_tab = st.tabs(["下载文件","重命名文件","删除文件"])
+                with download:
+                    if st.checkbox("创建下载链接",key="download_link"):
+                        with open(select_file_or_dir_abs,"rb") as f:
+                            st.download_button(label="下载文件",data=f,file_name=select_file_or_dir.split(os.sep)[-1])
+                            st.rerun()
+                with delete_file_tab:
+                    delete_file = st.button("删除文件",key="delete_file")
+                    if delete_file:
+                        if os.path.isfile(select_file_or_dir_abs):
+                            with st.spinner("删除中..."):
+                                os.remove(select_file_or_dir_abs)
+                                st.success("删除成功")
+                                st.rerun()
+                        else:
+                            st.warning("无法删除文件")
+                with rename_dir_tab:
+                    new_dir_name = st.text_input("请输入更名后的文件名称",key="rename_dir_name")
+                    if new_dir_name != "":
+                        rename_dir = st.button("重命名文件",key="rename_folder")
+                        if rename_dir:
+                            not_in_name = ["\\","/",">","<",":","*","?","\"","|"]
+                            can_be_name = True
+                            for i in not_in_name:
+                                if i in new_dir_name:
+                                    can_be_name = False
+                            if can_be_name:
+                                renamed = (os.sep).join(select_file_or_dir_abs.split(os.sep)[:-1])+os.sep+new_dir_name
+                                print(renamed)
+                                if os.path.exists(renamed):
+                                    st.warning("文件已存在")
+                                else:
+                                    os.rename(select_file_or_dir_abs,renamed)
+                                    st.info("重命名文件成功")
+                                    st.rerun()
+                            else:
+                                st.warning("文件名称不合法")
+                            rename_dir = False
+                        else:
+                            st.success("请点击重命名文件按钮以重命名文件")
+                    else:
+                        st.success("请输入文件名称")
+        except:
+            st.error("发现未知错误")
+    else:
 
-
-
-
-
+        # 没有写入权限，无法修改文件，无法上传文件和重命名、删除文件
+        st.title(":blue[文件管理器🗂️]")
+        data_tree = get_folder_structure(data_dir)
+        select_file_or_dir = select_file(data_tree)
+        select_file_or_dir_abs = select_file_or_dir.replace(".",data_dir,1)
+        if is_dir(select_file_or_dir,data_tree):
+            if select_file_or_dir != ".":
+                st.info(select_file_or_dir.replace(os.sep," > "))
+                st.info("这是一个文件夹，请在侧边栏选择一个文件进行操作")
+                st.info("如需要更多权限，请在侧边栏输入管理员密码")
+            else:
+                st.info(select_file_or_dir.replace(os.sep," > "))
+                st.info("这是根目录，请在侧边栏选择一个文件进行操作")
+                st.info("如需要更多权限，请在侧边栏输入管理员密码")
+        else:
+            st.info(select_file_or_dir.replace(os.sep," > "))
+            with st.expander("查看文件"):
+                if st.checkbox("显示文件内容",key="show_file_content"):
+                    # 如果文件大小小于100M，则显示文件内容
+                    if os.path.getsize(select_file_or_dir_abs) < 100*1024*1024:
+                        if select_file_or_dir_abs.endswith(".txt"):
+                            with open(select_file_or_dir_abs,"r",encoding="utf-8") as f:
+                                st.text(f.read())
+                        elif select_file_or_dir_abs.endswith(".jpg"):
+                            st.image(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".jpeg"):
+                            st.image(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".png"):
+                            st.image(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".gif"):
+                            st.image(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".mp4"):
+                            st.video(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".mp3"):
+                            st.audio(select_file_or_dir_abs,format="audio/mp3")
+                        elif select_file_or_dir_abs.endswith(".wav"):
+                            st.audio(select_file_or_dir_abs,format="audio/wav")
+                        else:
+                            st.warning("无法显示文件内容")
+                    else:
+                        st.warning("文件过大，无法显示文件内容")
+            download, = st.tabs(["下载文件"])
+            with download:
+                if st.checkbox("创建下载链接",key="download_link_2"):
+                    with open(select_file_or_dir_abs,"rb") as f:
+                        st.download_button(label="下载文件",data=f.read(),file_name=select_file_or_dir.split(os.sep)[-1])
+    if st.sidebar.button("退出文件管理器"):
+        st.session_state["mode"] = "books"
+        st.rerun()
+    try:
+        exec(settings["additionalcode"],globals())
+    except:
+        pass
