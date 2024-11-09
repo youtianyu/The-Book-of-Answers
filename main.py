@@ -711,7 +711,6 @@ elif st.session_state["mode"] == "manager":
                     if st.checkbox("创建下载链接",key="download_link"):
                         with open(select_file_or_dir_abs,"rb") as f:
                             st.download_button(label="下载文件",data=f,file_name=select_file_or_dir.split(os.sep)[-1])
-                            st.rerun()
                 with delete_file_tab:
                     delete_file = st.button("删除文件",key="delete_file")
                     if delete_file:
