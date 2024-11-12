@@ -42,7 +42,7 @@ def write_stream(response):
 def stream_data(text):
     for word in list(text):
         yield word
-        time.sleep(0.005)
+        time.sleep(0.001)
 def count_files_in_directory(directory):
     file_count = 0
     for entry in os.scandir(directory):
@@ -125,7 +125,7 @@ elif st.session_state['mode'] == "books":
                                         st.caption(f"名称: **{mtrl_name}**")
                                         st.caption(f"添加日期: **{mtrl_date}**")
                                         st.caption(f"文件地址: **{mtrl_dir}**")
-                                        with st.expander("配置",expanded=True,icon="⚙️"):
+                                        with st.expander("配置",expanded=False,icon="⚙️"):
                                             coll5,colr5,_ = st.columns([1,4,10])
                                             with coll5:
                                                 st.write("  ")
@@ -133,6 +133,7 @@ elif st.session_state['mode'] == "books":
                                                 st.write("字体:")
                                             with colr5:                                    
                                                 mode = st.selectbox("    ",["流","12px","14px","16px","18px","20px","22px","24px","26px","28px","30px","32px","34px","36px","38px","40px"])
+                                        with st.expander("范围",expanded=True,icon="📜"):
                                             if abs(0-(mtrl_num-1))>0:
                                                 u_mtrl_range = st.slider("选择一个范围:",0,mtrl_num-1,[0,0])
                                             else:
@@ -146,43 +147,77 @@ elif st.session_state['mode'] == "books":
                                                 dbs = []
                                                 for i2 in range(u_mtrl_range[0],u_mtrl_range[1]+1):
                                                     i = mtrl_ls_dir[i2]
-                                                    if i.endswith(".png") or i.endswith(".jpg") or i.endswith(".jpeg"):
-                                                        st.image(i,caption=f"第{mtrl_ls_dir.index(i)+1}章  "+str(i),use_column_width=True)
-                                                    elif i.endswith(".txt"):
-                                                        with open(i,"r",encoding="utf-8") as f:
+                                                    try:
+                                                        if i.endswith(".png") or i.endswith(".jpg") or i.endswith(".jpeg") or i.endswith(".bmp") or i.endswith(".gif"):
+                                                            st.image(i,use_column_width=True)
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        elif i.endswith(".mp3") or i.endswith(".wav") or i.endswith(".flac"):
+                                                            st.audio(i)
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        elif i.endswith(".mp4") or i.endswith(".avi") or i.endswith(".mov"):
                                                             with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
-                                                                dh_data = f.read()
-                                                                if "\n" in dh_data:
-                                                                    for i3 in dh_data.split("\n"):
-                                                                        if mode == "流":
-                                                                            st.write_stream(stream_data(i3))
-                                                                        else:
-                                                                            st.markdown(f"<p style='font-size:{mode};'>{i3}</p>", unsafe_allow_html=True)
-                                                                else:
-                                                                    if mode == "流":
-                                                                        st.write_stream(stream_data(f.read()))
+                                                                st.video(i)
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        elif i.endswith(".txt"):
+                                                            with open(i,"r",encoding="utf-8") as f:
+                                                                with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                    dh_data = f.read()
+                                                                    if "\n" in dh_data:
+                                                                        for i3 in dh_data.split("\n"):
+                                                                            if mode == "流":
+                                                                                st.write_stream(stream_data(i3))
+                                                                            else:
+                                                                                st.markdown(f"<p style='font-size:{mode};'>{i3}</p>", unsafe_allow_html=True)
                                                                     else:
-                                                                        st.markdown(f"<p style='font-size:{mode};'>{f.read()}</p>", unsafe_allow_html=True)
+                                                                        if mode == "流":
+                                                                            st.write_stream(stream_data(f.read()))
+                                                                        else:
+                                                                            st.markdown(f"<p style='font-size:{mode};'>{f.read()}</p>", unsafe_allow_html=True)
+                                                                st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        elif i.endswith(".py"):
+                                                            show_code = False
+                                                            with open(i,"r",encoding="utf-8") as f:
+                                                                with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                    py_data = f.read()
+                                                                    with st.spinner("正在运行控件..."):
+                                                                        try:
+                                                                            exec(py_data,globals())
+                                                                            show_code = True
+                                                                        except:
+                                                                            st.error("控件运行失败")
+                                                                            st.code(py_data,language="python")
+                                                                            show_code = False
+                                                                with st.expander("源"):
+                                                                    st.code(py_data,language="python")
+                                                                st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        elif i.endswith(".json"):
+                                                            with st.spinner("正在加载JSON文件..."):
+                                                                with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                    with open(i,"r",encoding="utf-8") as f:
+                                                                        st.json(json.load(f))
                                                             st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
-                                                    elif i.endswith(".py"):
-                                                        show_code = False
-                                                        with open(i,"r",encoding="utf-8") as f:
-                                                            with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
-                                                                py_data = f.read()
-                                                                with st.spinner("正在运行控件..."):
-                                                                    try:
-                                                                        exec(py_data,globals())
-                                                                        show_code = True
-                                                                    except:
-                                                                        st.error("控件运行失败")
-                                                                        st.code(py_data,language="python")
-                                                                        show_code = False
-                                                            with st.expander("源"):
-                                                                st.code(py_data,language="python")
+                                                        elif i.endswith(".csv"):
+                                                            import pandas as pd
+                                                            with st.spinner("正在加载CSV文件..."):
+                                                                with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                    with open(i,"r",encoding="utf-8") as f:
+                                                                        st.dataframe(pd.read_csv(f))
                                                             st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
-                                                                
-                                                    else:
-                                                        st.warning("未知文件类型")
+                                                        elif i.endswith(".pdf"):
+                                                            import base64
+                                                            with st.spinner("正在加载PDF文件..."):
+                                                                with st.container(height=max(1000//(abs(u_mtrl_range[0]-u_mtrl_range[1])+1),rq_height),border=True):
+                                                                    with open(i, "rb") as f:
+                                                                        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+                                                                        st.markdown(f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>', unsafe_allow_html=True)
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                        else:
+                                                            st.download_button(label="下载文件",data=open(i,"rb"),file_name=i)
+                                                            st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
+                                                    except:
+                                                        st.error("加载文件时出错")
+                                                        st.download_button(label="下载文件",data=open(i,"rb"),file_name=i)
+                                                        st.caption(f"{mtrl_name} 第{i2+1}章  "+str(i))
                                                     dbs.append(i)
                                             buffer = io.BytesIO()
                                             with zipfile.ZipFile(buffer, 'w') as zipf:
@@ -781,6 +816,8 @@ elif st.session_state["mode"] == "manager":
                         elif select_file_or_dir_abs.endswith(".png"):
                             st.image(select_file_or_dir_abs)
                         elif select_file_or_dir_abs.endswith(".gif"):
+                            st.image(select_file_or_dir_abs)
+                        elif select_file_or_dir_abs.endswith(".bmp"):
                             st.image(select_file_or_dir_abs)
                         elif select_file_or_dir_abs.endswith(".mp4"):
                             st.video(select_file_or_dir_abs)
