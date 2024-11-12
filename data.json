@@ -4,17 +4,17 @@
             "课文": {
                 "name": "金牌学典 - 课文",
                 "date": "2024-11-2",
-                "dir": "data/chinese/0/"
+                "dir": "data/chinese/0"
             },
             "周测小卷": {
                 "name": "金牌学典 - 周测小卷",
                 "date": "2024-11-2",
-                "dir": "data/chinese/1/"
+                "dir": "data/chinese/1"
             },
             "练习卷": {
                 "name": "金牌学典 - 练习卷",
                 "date": "2024-11-2",
-                "dir": "data/chinese/2/"
+                "dir": "data/chinese/2"
             }
         }
     },
@@ -23,7 +23,7 @@
             ".": {
                 "name": "学考精练",
                 "date": "2024-11-2",
-                "dir": "data/math/0/"
+                "dir": "data/math/0"
             }
         }
     },
@@ -32,12 +32,21 @@
             "课后精练": {
                 "name": "金牌学典 - 课后精练",
                 "date": "2024-11-2",
-                "dir": "data/history/0/"
+                "dir": "data/history/0"
             },
             "试卷": {
                 "name": "金牌学典 - 试卷",
                 "date": "2024-11-2",
-                "dir": "data/history/1/"
+                "dir": "data/history/1"
+            }
+        }
+    },
+    "物理":{
+        "快乐课堂":{
+            "天天向上课时练":{
+                "name":"快乐课堂 - 天天向上课时练",
+                "date":"2024-11-12",
+                "dir":"data/physics/0"
             }
         }
     }
