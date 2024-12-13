@@ -140,8 +140,8 @@ elif st.session_state['mode'] == "books":
                                                 u_mtrl_range = (0,0)
                                         mtrl_ls_dir = sorted(mtrl_ls_dir)
                                         mtrl_ls_dir = [mtrl_dir + os.sep + i for i in mtrl_ls_dir]
-                                        if u_mtrl_range[0] == 0 and u_mtrl_range[1] > 5:
-                                            st.warning("只能选择5章答案")
+                                        if u_mtrl_range[0] == 0 and u_mtrl_range[1] > 30:
+                                            st.warning("只能选择30章答案")
                                         else:
                                             with st.spinner("正在加载..."):
                                                 dbs = []
